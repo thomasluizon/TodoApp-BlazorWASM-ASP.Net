@@ -1,77 +1,55 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using TodoApp.Server.Models;
-using TodoApp.Server.Models.DTO;
+﻿using Entities.Entities;
+using Entities.Entities.DTO;
+using Entities.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace TodoApp.Server.Controllers
 {
-	[Route("api/[controller]/[action]")]
-	[ApiController]
-	public class AuthController : ControllerBase
+    public class AuthController : BaseController
 	{
-		private readonly IConfiguration _configuration;
-		public static User user = new();
+		private readonly IAuthService _authService;
 
-		public AuthController(IConfiguration configuration)
+		public AuthController(IAuthService authService)
 		{
-			_configuration = configuration;
+			_authService = authService;
 		}
 
 		[HttpPost]
 		public async Task<ActionResult<User>> Register(UserRegisterDto request)
 		{
-			CreatePasswordHash(request.Password, out var passwordHash, out var passwordSalt);
+			try
+			{
+				var user = await _authService.Register(request);
 
-			user.Id = Guid.NewGuid();
-			user.Name = request.Name;
-			user.Email = request.Email;
-			user.PasswordHash = passwordHash;
-			user.PasswordSalt = passwordSalt;
+				if (!ModelState.IsValid)
+					return BadRequest("Wrong user information.");
 
-			return Ok(user);
+				return Ok(user);
+			}
+			catch (Exception e)
+			{
+				return StatusCode(StatusCodes.Status500InternalServerError, e);
+			}
 		}
 
 		[HttpPost]
 		public async Task<ActionResult<string>> Login(UserLoginDto request)
 		{
-			if (!user.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase))
-				return BadRequest("User not found.");
-
-			if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
-				return BadRequest("Incorrect password");
-
-			return Ok(CreateToken(user));
-		}
-
-		private string CreateToken(User userRequest)
-		{
-			List<Claim> claims = new()
+			if (!ModelState.IsValid)
+				return BadRequest("Wrong user information.");
+			try
 			{
-				new Claim(ClaimTypes.Email, userRequest.Email)
-			};
+				var token = await _authService.Login(request);
 
-			var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
-			var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-			var token = new JwtSecurityToken(claims: claims, expires: DateTime.Now.AddDays(1), signingCredentials: cred);
+				if (string.IsNullOrEmpty(token))
+					return BadRequest("Incorrect email or password.");
 
-			return new JwtSecurityTokenHandler().WriteToken(token);
-		}
-
-		private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-		{
-			using var hmac = new HMACSHA512();
-			passwordSalt = hmac.Key;
-			passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-		}
-
-		private static bool VerifyPasswordHash(string password, IEnumerable<byte> passwordHash, byte[] passwordSalt)
-		{
-			using var hmac = new HMACSHA512(passwordSalt);
-			var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-			return computedHash.SequenceEqual(passwordHash);
+				return Ok(token);
+			}
+			catch (Exception e)
+			{
+				return StatusCode(StatusCodes.Status500InternalServerError, e);
+			}
 		}
 	}
 }
