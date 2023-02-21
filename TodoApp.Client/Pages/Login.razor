@@ -10,21 +10,21 @@
 		<MudText Typo="Typo.h5">Login</MudText>
 	</MudCardHeader>
 	<MudCardContent>
-		<EditForm Model="@_model" OnValidSubmit="@HandleLogin">
+		<EditForm Model="@model" OnValidSubmit="@HandleLogin">
 			<DataAnnotationsValidator/>
 
-			<MudTextField T="string" Label="Email" @bind-Value="_model.Email" For="@(() => _model.Email)"/>
-			<MudTextField T="string" InputType="InputType.Password" Label="Password" @bind-Value="_model.Password" For="@(() => _model.Password)"/>
+			<MudTextField T="string" Label="Email" @bind-Value="model.Email" For="@(() => model.Email)"/>
+			<MudTextField T="string" InputType="InputType.Password" Label="Password" @bind-Value="model.Password" For="@(() => model.Password)"/>
 
 			<div class="d-flex align-center justify-end mt-4">
 				<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Login</MudButton>
 			</div>
 		</EditForm>
 		
-		@if (_error != null)
+		@if (error != null)
 		{
 			<MudText Color="Color.Error">
-				@_error
+				@error
 			</MudText>
 		}
 	</MudCardContent>
@@ -32,22 +32,23 @@
 
 
 @code {
-	readonly UserLoginDto _model = new UserLoginDto();
-	string? _error = null;
+	UserLoginDto model = new UserLoginDto();
+	MudForm form;
+	string? error = null;
 
 	private async Task HandleLogin(EditContext context)
 	{
 		var api = Configuration.GetSection("api").Value;
-		var response = await Http.PostAsJsonAsync($"{api}/Auth/Login", _model);
+		var response = await Http.PostAsJsonAsync($"{api}/Auth/Login", model);
 
 		if (!response.IsSuccessStatusCode)
 		{
-			_error = await response.Content.ReadAsStringAsync();
+			error = await response.Content.ReadAsStringAsync();
 			StateHasChanged();
 			return;
 		}
 
-		_error = null;
+		error = null;
 		StateHasChanged();
 		var token = await response.Content.ReadAsStringAsync();
 		await LocalStorage.SetItemAsync("token", token);

@@ -1,4 +1,4 @@
-﻿@page "/edit/{Id}"
+﻿@page "/edit/{id}"
 @attribute [Authorize]
 @inject IConfiguration Configuration
 @inject HttpClient Http
@@ -9,21 +9,21 @@
 		<MudText Typo="Typo.h5">Edit</MudText>
 	</MudCardHeader>
 	<MudCardContent>
-		<EditForm Model="@_model" OnValidSubmit="@HandleEdit">
+		<EditForm Model="@model" OnValidSubmit="@HandleEdit">
 			<DataAnnotationsValidator />
 			
-			<MudTextField T="Guid" ReadOnly="true" InputType="InputType.Hidden" @bind-Value="_model.Id" For="@(() => _model.Id)" />
-			<MudTextField T="string" Label="Title" @bind-Value="_model.Title" For="@(() => _model.Title)" />
+			<MudTextField T="Guid" ReadOnly="true" InputType="InputType.Hidden" @bind-Value="model.Id" For="@(() => model.Id)" />
+			<MudTextField T="string" Label="Title" @bind-Value="model.Title" For="@(() => model.Title)" />
 
 			<div class="d-flex align-center justify-end mt-4">
 				<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Edit</MudButton>
 			</div>
 		</EditForm>
 
-		@if (_error != null)
+		@if (error != null)
 		{
 			<MudText Color="Color.Error">
-				@_error
+				@error
 			</MudText>
 		}
 	</MudCardContent>
@@ -31,19 +31,19 @@
 
 @code {
 	[Parameter]
-	public string? Id { get; set; }
+	public string id { get; set; }
 
-	string? _error;
-	private TodoResponseDto? _model = new TodoResponseDto();
+	string? error;
+	private TodoResponseDto model = new TodoResponseDto();
 
-	string? _api;
+	string? api;
 
 	protected override async Task OnInitializedAsync()
 	{
-		_api = Configuration.GetSection("api").Value;
-		_model = await Http.GetFromJsonAsync<TodoResponseDto>($"{_api}/Todo/{Id}");
+		api = Configuration.GetSection("api").Value;
+		model = await Http.GetFromJsonAsync<TodoResponseDto>($"{api}/Todo/{id}");
 
-		if (_model == null)
+		if (model == null)
 			Navigation.NavigateTo("/");
 		
 		StateHasChanged();
@@ -51,22 +51,19 @@
 
 	private async Task HandleEdit()
 	{
-		if (_model != null)
+		var requestModel = new TodoUpdateRequestDto()
 		{
-			var requestModel = new TodoUpdateRequestDto()
-			{
-				Id = _model.Id,
-				Title = _model.Title
-			};
+			Id = model.Id,
+			Title = model.Title
+		};
 
-			var response = await Http.PutAsJsonAsync($"{_api}/Todo", requestModel);
+		var response = await Http.PutAsJsonAsync($"{api}/Todo", requestModel);
 
-			if (!response.IsSuccessStatusCode)
-			{
-				_error = await response.Content.ReadAsStringAsync();
-				StateHasChanged();
-				return;
-			}
+		if (!response.IsSuccessStatusCode)
+		{
+			error = await response.Content.ReadAsStringAsync();
+			StateHasChanged();
+			return;
 		}
 
 		Navigation.NavigateTo("/");

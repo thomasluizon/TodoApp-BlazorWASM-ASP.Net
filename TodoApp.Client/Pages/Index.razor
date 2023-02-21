@@ -6,7 +6,7 @@
 
 <PageTitle>Todos</PageTitle>
 
-@if (_loading)
+@if (loading)
 {
 	<MudProgressCircular Color="Color.Default" Indeterminate="true" />
 }
@@ -17,9 +17,9 @@ else
 		<MudText>New</MudText>
 	</MudButton>
 
-	@if (_todos != null && _todos.Any())
+	@if (todos.Any())
 	{
-		<MudTable Items="@_todos" FixedHeader="true" T="TodoResponseDto">
+		<MudTable Items="@todos" FixedHeader="true" T="TodoResponseDto">
 			<HeaderContent>
 				<MudTh>Title</MudTh>
 				<MudTh>Actions</MudTh>
@@ -44,15 +44,15 @@ else
 }
 
 @code{
-	[Inject] private IDialogService? DialogService { get; set; }
+	[Inject] private IDialogService DialogService { get; set; }
 
-	List<TodoResponseDto>? _todos;
-	bool _loading = false;
-	string? _api;
+	List<TodoResponseDto>? todos;
+	bool loading = false;
+	string? api;
 
 	protected override async Task OnInitializedAsync()
 	{
-		_api = Configuration.GetSection("api").Value;
+		api = Configuration.GetSection("api").Value;
 
 		await GetTodos();
 
@@ -66,27 +66,24 @@ else
 
 	private async Task Delete(Guid id)
 	{
-		if (DialogService != null)
+		var result = await DialogService.ShowMessageBox(
+			"Warning", 
+			"Are you sure you want to delete?", 
+			yesText:"Delete!", cancelText:"Cancel");
+
+		if (result != null)
 		{
-			var result = await DialogService.ShowMessageBox(
-				"Warning", 
-				"Are you sure you want to delete?", 
-				yesText:"Delete!", cancelText:"Cancel");
-
-			if (result != null)
-			{
-				await Http.DeleteAsync($"{_api}/Todo/{id}");
-				await GetTodos();
-			}
+			await Http.DeleteAsync($"{api}/Todo/{id}");
+			await GetTodos();
 		}
-
+			
 		StateHasChanged();
 	}
 
 	private async Task GetTodos() 
 	{
-		_loading = true;
-		_todos = await Http.GetFromJsonAsync<List<TodoResponseDto>>($"{_api}/Todo");
-		_loading = false;
+		loading = true;
+		todos = await Http.GetFromJsonAsync<List<TodoResponseDto>>($"{api}/Todo");
+		loading = false;
 	}
 }
