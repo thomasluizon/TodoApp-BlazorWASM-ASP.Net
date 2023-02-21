@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Entities;
 using Entities.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,6 +8,9 @@ using Services.Services;
 using TodoApp.Server.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var keyVaultEndpoint = new Uri(Environment.GetEnvironmentVariable("VaultUri"));
+builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultAzureCredential());
 
 builder.Services.AddCors(options =>
 {
