@@ -1,5 +1,89 @@
 ﻿@page "/"
+@attribute [Authorize]
+@inject IConfiguration Configuration;
+@inject HttpClient Http
+@inject NavigationManager Navigation
 
 <PageTitle>Todos</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">Todo app</MudText>
+@if (loading)
+{
+	<MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+	<MudButton OnClick="@(() => Navigation.NavigateTo("/create"))" Class="mb-4" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Primary">
+		<MudIcon Icon="@Icons.Material.Filled.Add"/>
+		<MudText>New</MudText>
+	</MudButton>
+
+	@if (todos.Any())
+	{
+		<MudTable Items="@todos" FixedHeader="true" T="TodoResponseDto">
+			<HeaderContent>
+				<MudTh>Title</MudTh>
+				<MudTh>Actions</MudTh>
+			</HeaderContent>
+			<RowTemplate>
+				<MudTd DataLabel="Title">@context.Title</MudTd>
+				<MudTd DataLabel="Actions">
+					<MudButton OnClick="() => Edit(context.Id)" Variant="Variant.Filled" Color="Color.Tertiary">
+						<MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit"/>
+					</MudButton>
+					<MudButton OnClick="() => Delete(context.Id)" Variant="Variant.Filled" Color="Color.Error">
+						<MudIcon Icon="@Icons.Material.Filled.Delete" Title="Delete"/>
+					</MudButton>
+				</MudTd>
+			</RowTemplate>
+		</MudTable>
+	}
+	else
+	{
+		<MudText Typo="Typo.h5">Please add a todo!</MudText>
+	}
+}
+
+@code{
+	[Inject] private IDialogService DialogService { get; set; }
+
+	List<TodoResponseDto>? todos;
+	bool loading = false;
+	string? api;
+
+	protected override async Task OnInitializedAsync()
+	{
+		api = Configuration.GetSection("api").Value;
+
+		await GetTodos();
+
+		StateHasChanged();
+	}
+
+	private void Edit(Guid id)
+	{
+		Navigation.NavigateTo($"/edit/{id}");
+	}
+
+	private async Task Delete(Guid id)
+	{
+		var result = await DialogService.ShowMessageBox(
+			"Warning", 
+			"Are you sure you want to delete?", 
+			yesText:"Delete!", cancelText:"Cancel");
+
+		if (result != null)
+		{
+			await Http.DeleteAsync($"{api}/Todo/{id}");
+			await GetTodos();
+		}
+			
+		StateHasChanged();
+	}
+
+	private async Task GetTodos() 
+	{
+		loading = true;
+		todos = await Http.GetFromJsonAsync<List<TodoResponseDto>>($"{api}/Todo");
+		loading = false;
+	}
+}

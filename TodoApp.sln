@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Entities", "Entities\Entiti
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Services", "Services\Services.csproj", "{2689359B-5658-4A7E-89A1-CCA5F6B0A25D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoApp.Client", "TodoApp.Client\TodoApp.Client.csproj", "{2D4C5986-7999-4E9B-8D93-A33DB9D4D522}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoApp.Client", "TodoApp.Client\TodoApp.Client.csproj", "{2D4C5986-7999-4E9B-8D93-A33DB9D4D522}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

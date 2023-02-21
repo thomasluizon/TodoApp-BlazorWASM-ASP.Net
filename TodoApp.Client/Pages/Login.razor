@@ -1,0 +1,60 @@
+﻿@page "/login"
+@using System.Net
+@inject NavigationManager NavManager
+@inject ILocalStorageService LocalStorage
+@inject HttpClient Http
+@inject IConfiguration Configuration;
+@inject AuthenticationStateProvider AuthProvider;
+
+<MudCard onbeforepasteOutlined="true">
+	<MudCardHeader class="d-flex justify-center">
+		<MudText Typo="Typo.h5">Login</MudText>
+	</MudCardHeader>
+	<MudCardContent>
+		<EditForm Model="@model" OnValidSubmit="@HandleLogin">
+			<DataAnnotationsValidator/>
+
+			<MudTextField T="string" Label="Email" @bind-Value="model.Email" For="@(() => model.Email)"/>
+			<MudTextField T="string" InputType="InputType.Password" Label="Password" @bind-Value="model.Password" For="@(() => model.Password)"/>
+
+			<div class="d-flex align-center justify-end mt-4">
+				<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Login</MudButton>
+			</div>
+		</EditForm>
+		
+		@if (error != null)
+		{
+			<MudText Color="Color.Error">
+				@error
+			</MudText>
+		}
+	</MudCardContent>
+</MudCard>
+
+
+@code {
+	UserLoginDto model = new UserLoginDto();
+	MudForm form;
+	string? error = null;
+
+	private async Task HandleLogin(EditContext context)
+	{
+		var api = Configuration.GetSection("api").Value;
+		var response = await Http.PostAsJsonAsync($"{api}/Auth/Login", model);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			error = await response.Content.ReadAsStringAsync();
+			StateHasChanged();
+			return;
+		}
+
+		error = null;
+		StateHasChanged();
+		var token = await response.Content.ReadAsStringAsync();
+		await LocalStorage.SetItemAsync("token", token);
+		await AuthProvider.GetAuthenticationStateAsync();
+
+		NavManager.NavigateTo("/");
+	}
+}

@@ -1,0 +1,50 @@
+﻿@page "/create"
+@attribute [Authorize]
+@inject IConfiguration Configuration
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<MudCard Outlined="true">
+	<MudCardHeader class="d-flex justify-center">
+		<MudText Typo="Typo.h5">Create</MudText>
+	</MudCardHeader>
+	<MudCardContent>
+		<EditForm Model="@model" OnValidSubmit="@HandleCreate">
+			<DataAnnotationsValidator />
+
+			<MudTextField T="string" Label="Title" @bind-Value="model.Title" For="@(() => model.Title)" />
+
+			<div class="d-flex align-center justify-end mt-4">
+				<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Create</MudButton>
+			</div>
+		</EditForm>
+
+		@if (error != null)
+		{
+			<MudText Color="Color.Error">
+				@error
+			</MudText>
+		}
+	</MudCardContent>
+</MudCard>
+
+@code {
+	string? error = null;
+	TodoCreateRequestDto model = new TodoCreateRequestDto();
+
+	private async Task HandleCreate()
+	{
+		var api = Configuration.GetSection("api").Value;
+
+		var response = await Http.PostAsJsonAsync($"{api}/Todo", model);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			error = await response.Content.ReadAsStringAsync();
+			StateHasChanged();
+			return;
+		}
+
+		Navigation.NavigateTo("/");
+	}
+}

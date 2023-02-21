@@ -1,3 +1,14 @@
 ﻿<MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+	<MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+	<MudSpacer/>
+	<AuthorizeView>
+		<Authorized>
+			<MudText Typo="Typo.subtitle1" Align="Align.Center">Hi, @context.User.Identity.Name</MudText>
+			<MudNavLink Href="/logout" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+		</Authorized>
+		<NotAuthorized>
+			<MudNavLink Href="register" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AppRegistration">Register</MudNavLink>
+			<MudNavLink Href="login" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>
+		</NotAuthorized>
+	</AuthorizeView>
 </MudNavMenu>

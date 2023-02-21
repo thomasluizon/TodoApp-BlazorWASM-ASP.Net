@@ -1,12 +1,12 @@
-﻿using Entities;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using Entities;
 using Entities.Entities;
 using Entities.Entities.DTO;
 using Entities.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
 
 namespace Services.Services
 {
@@ -60,11 +60,12 @@ namespace Services.Services
 		/// </summary>
 		/// <param name="userRequest">Receives the userRequest object</param>
 		/// <returns>Returns the Json Web Token</returns>
-		private string CreateToken(Entity userRequest)
+		private string CreateToken(User userRequest)
 		{
 			List<Claim> claims = new()
 			{
-				new Claim("id", userRequest.Id.ToString())
+				new Claim("id", userRequest.Id.ToString()),
+				new Claim(ClaimTypes.Name, userRequest.Name)
 			};
 
 			var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_pattern));
