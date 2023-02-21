@@ -9,44 +9,44 @@
 		<MudText Typo="Typo.h5">Register</MudText>
 	</MudCardHeader>
 	<MudCardContent>
-		<EditForm Model="@model" OnValidSubmit="@HandleRegister">
+		<EditForm Model="@_model" OnValidSubmit="@HandleRegister">
 			<DataAnnotationsValidator />
 
-			<MudTextField T="string" Label="Name" @bind-Value="model.Name" For="@(() => model.Name)" />
-			<MudTextField T="string" Label="Email" @bind-Value="model.Email" For="@(() => model.Email)" />
-			<MudTextField T="string" InputType="InputType.Password" Label="Password" @bind-Value="model.Password" For="@(() => model.Password)" />
+			<MudTextField T="string" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)" />
+			<MudTextField T="string" Label="Email" @bind-Value="_model.Email" For="@(() => _model.Email)" />
+			<MudTextField T="string" InputType="InputType.Password" Label="Password" @bind-Value="_model.Password" For="@(() => _model.Password)" />
 			
 			<div class="d-flex align-center justify-end mt-4">
 				<MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
 			</div>
 		</EditForm>
 
-		@if (error != null)
+		@if (_error != null)
 		{
 			<MudText Color="Color.Error">
-				@error
+				@_error
 			</MudText>
 		}
 	</MudCardContent>
 </MudCard>
 
 @code {
-	UserRegisterDto model = new UserRegisterDto();
-	string? error = null;
+	readonly UserRegisterDto _model = new UserRegisterDto();
+	string? _error = null;
 
 	private async Task HandleRegister(EditContext context)
 	{
 		var api = Configuration.GetSection("api").Value;
-		var response = await Http.PostAsJsonAsync($"{api}/Auth/Register", model);
+		var response = await Http.PostAsJsonAsync($"{api}/Auth/Register", _model);
 
 		if (!response.IsSuccessStatusCode)
 		{
-			error = await response.Content.ReadAsStringAsync();
+			_error = await response.Content.ReadAsStringAsync();
 			StateHasChanged();
 			return;
 		}
 
-		error = null;
+		_error = null;
 		StateHasChanged();
 		NavManager.NavigateTo("/");
 	}
