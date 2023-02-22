@@ -8,6 +8,7 @@ using TodoApp.Server.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+const string api = "https://todoappclient.azurewebsites.net/";
 
 builder.Services.AddCors(options =>
 {
@@ -19,7 +20,7 @@ builder.Services.AddCors(options =>
 	options.AddPolicy(name: MyAllowSpecificOrigins,
 	policy =>
 	{
-		policy.WithOrigins("https://todoappclient.azurewebsites.net/");
+		policy.WithOrigins(api);
 	});
 });
 
@@ -43,10 +44,14 @@ builder.Services.AddAuthentication(x =>
 {
 	x.RequireHttpsMetadata = false;
 	x.SaveToken = true;
+	x.Authority = api;
+	x.Audience = api;
 	x.TokenValidationParameters = new TokenValidationParameters
 	{
 		ValidateIssuerSigningKey = true,
 		IssuerSigningKey = new SymmetricSecurityKey(key),
+		ValidAudience = api,
+		ValidIssuer = api,
 		ValidateIssuer = false,
 		ValidateAudience = false
 	};
