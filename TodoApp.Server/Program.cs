@@ -7,12 +7,19 @@ using Services.Services;
 using TodoApp.Server.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddCors(options =>
 {
 	options.AddDefaultPolicy(policyBuilder =>
 	{
 		policyBuilder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+	});
+
+	options.AddPolicy(name: MyAllowSpecificOrigins,
+	policy =>
+	{
+		policy.WithOrigins("https://todoappclient.azurewebsites.net/");
 	});
 });
 
@@ -49,7 +56,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(optionsBuilder => optionsBui
 
 var app = builder.Build();
 
-app.UseCors();
+app.UseCors(MyAllowSpecificOrigins);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
